@@ -1,0 +1,88 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+.App {
+  text-align: center;
+  font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  min-height: 100vh;
+}
+
+h2 {
+  margin-top: 32px;
+  margin-bottom: 24px;
+  color: #2d3748;
+}
+
+label {
+  display: inline-block;
+  margin: 10px 0 10px 0;
+  font-size: 1.1em;
+  color: #333;
+}
+
+input[type="number"] {
+  margin-left: 8px;
+  padding: 6px 10px;
+  border: 1px solid #bdbdbd;
+  border-radius: 5px;
+  font-size: 1em;
+  width: 120px;
+  background: #fff;
+  transition: border 0.2s;
+}
+input[type="number"]:focus {
+  border: 1.5px solid #3182ce;
+  outline: none;
+}
+
+button {
+  margin-top: 18px;
+  padding: 10px 28px;
+  background: #3182ce;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button:hover {
+  background: #225ea8;
+}
+
+.result-box {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.06);
+  padding: 28px 28px 18px 28px;
+  margin: 32px auto 0 auto;
+  max-width: 600px;
+  text-align: left;
+}
+
+.result-box h3 {
+  color: #225ea8;
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.15em;
+}
+
+.result-box ul {
+  margin: 0 0 18px 0;
+  padding-left: 18px;
+}
+
+.result-box li {
+  margin-bottom: 8px;
+  font-size: 1.08em;
+}
+
+@media (max-width: 700px) {
+  .result-box {
+    padding: 16px 4vw 10px 4vw;
+    max-width: 98vw;
+  }
+  input[type="number"] {
+    width: 80px;
+  }
+}

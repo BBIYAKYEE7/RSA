@@ -1,0 +1,169 @@
+import React, { useState, useEffect } from "react";
+import "./App.css";
+
+// 최대공약수
+function gcd(a, b) {
+  return b === 0 ? a : gcd(b, a % b);
+}
+
+// 모듈러 역원 (확장 유클리드)
+function modInverse(e, phi) {
+  let [a, b, x0, x1] = [phi, e, 0, 1];
+  while (b !== 0) {
+    let q = Math.floor(a / b);
+    [a, b] = [b, a % b];
+    [x0, x1] = [x1, x0 - q * x1];
+  }
+  return x0 < 0 ? x0 + phi : x0;
+}
+
+// 모듈러 거듭제곱
+function modPow(base, exp, mod) {
+  let result = 1;
+  base = base % mod;
+  while (exp > 0) {
+    if (exp % 2 === 1) result = (result * base) % mod;
+    exp = Math.floor(exp / 2);
+    base = (base * base) % mod;
+  }
+  return result;
+}
+
+// LaTeX 수식 span
+function latex(str) {
+  return `<span style="font-size:1.1em;">\\(${str}\\)</span>`;
+}
+
+function App() {
+  const [p, setP] = useState("");
+  const [q, setQ] = useState("");
+  const [message, setMessage] = useState("");
+  const [encryptSteps, setEncryptSteps] = useState([]);
+  const [crtSteps, setCrtSteps] = useState([]);
+
+  // MathJax 수식 렌더링 트리거
+  useEffect(() => {
+    if (window.MathJax && (encryptSteps.length > 0 || crtSteps.length > 0)) {
+      window.MathJax.typesetPromise();
+    }
+  }, [encryptSteps, crtSteps]);
+
+  const handleRSA = () => {
+    const P = parseInt(p, 10);
+    const Q = parseInt(q, 10);
+    const m = parseInt(message, 10);
+
+    if (!P || !Q || !m) {
+      alert("p, q, 평문을 모두 입력하세요.");
+      return;
+    }
+
+    const n = P * Q;
+    const phi = (P - 1) * (Q - 1);
+
+    let e = 3;
+    while (e < phi && gcd(e, phi) !== 1) e += 2;
+
+    const d = modInverse(e, phi);
+    const c = modPow(m, e, n);
+
+    // 암호화 과정
+    setEncryptSteps([
+      latex(`n = p \\times q = ${P} \\times ${Q} = ${n}`),
+      latex(`\\varphi(n) = (p-1) \\times (q-1) = ${P - 1} \\times ${Q - 1} = ${phi}`),
+      latex(`e: 1 < e < \\varphi(n),\\ \\gcd(e,\\varphi(n)) = 1\\ \\Rightarrow\\ e = ${e}`),
+      latex(`d = e^{-1} \\bmod \\varphi(n) = ${d}`),
+      latex(`\\text{공개키: } (e, n) = (${e}, ${n}),\\ \\text{개인키: } (d, n) = (${d}, ${n})`),
+      latex(`\\text{암호문 } c = m^e \\bmod n = ${m}^{${e}} \\bmod ${n} = ${c}`),
+    ]);
+
+    // CRT 복호화 과정
+    const dp = d % (P - 1);
+    const dq = d % (Q - 1);
+    const qinv = modInverse(Q, P);
+    const m1 = modPow(c, dp, P);
+    const m2 = modPow(c, dq, Q);
+    const h = (qinv * (m1 - m2 + P)) % P;
+    const m_crt = (m2 + h * Q) % n;
+
+    setCrtSteps([
+      latex(`d_p = d \\bmod (p-1) = ${d} \\bmod ${P - 1} = ${dp}`),
+      latex(`d_q = d \\bmod (q-1) = ${d} \\bmod ${Q - 1} = ${dq}`),
+      latex(`q_{inv} = q^{-1} \\bmod p = ${Q}^{-1} \\bmod ${P} = ${qinv}`),
+      latex(`m_1 = c^{d_p} \\bmod p = ${c}^{${dp}} \\bmod ${P} = ${m1}`),
+      latex(`m_2 = c^{d_q} \\bmod q = ${c}^{${dq}} \\bmod ${Q} = ${m2}`),
+      latex(`h = q_{inv} \\times (m_1 - m_2) \\bmod p = ${qinv} \\times (${m1} - ${m2}) \\bmod ${P} = ${h}`),
+      latex(`\\text{CRT 공식: } m = m_2 + h \\times q \\bmod n`),
+      latex(`m = ${m2} + ${h} \\times ${Q} \\bmod ${n} = ${m_crt}`),
+      latex(`\\text{복호화 결과: } ${m_crt}`),
+    ]);
+  };
+
+  return (
+    <div className="App">
+      <div className="main-content">
+        <h2>RSA 암호화/복호화 (CRT 과정 포함, LaTeX 수식)</h2>
+        <div>
+          <label>
+            소수 p:{" "}
+            <input value={p} onChange={e => setP(e.target.value)} type="number" />
+          </label>
+        </div>
+        <div>
+          <label>
+            소수 q:{" "}
+            <input value={q} onChange={e => setQ(e.target.value)} type="number" />
+          </label>
+        </div>
+        <div>
+          <label>
+            평문(정수):{" "}
+            <input
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              type="number"
+            />
+          </label>
+        </div>
+        <button onClick={handleRSA} style={{ margin: "10px 0" }}>
+          암호화 및 CRT 복호화 과정 보기
+        </button>
+        {(encryptSteps.length > 0 || crtSteps.length > 0) && (
+          <div className="result-box">
+            <h3>암호화 과정</h3>
+            <ul>
+              {encryptSteps.map((step, idx) => (
+                <li key={idx} style={{ listStyle: "none", marginBottom: 6 }}>
+                  <div dangerouslySetInnerHTML={{ __html: step }} />
+                </li>
+              ))}
+            </ul>
+            <h3>CRT 복호화 과정</h3>
+            <ul>
+              {crtSteps.map((step, idx) => (
+                <li key={idx} style={{ listStyle: "none", marginBottom: 6 }}>
+                  <div dangerouslySetInnerHTML={{ __html: step }} />
+                </li>
+              ))}
+            </ul>
+            <div style={{marginTop: 10, color: "#888"}}>
+              <b>※ 수식이 보이지 않으면 새로고침(F5) 또는 MathJax 환경을 확인하세요.</b>
+            </div>
+          </div>
+        )}
+      </div>
+      <footer style={{
+        marginTop: 40,
+        padding: "18px 0 12px 0",
+        color: "#888",
+        fontSize: "0.98em",
+        borderTop: "1px solid #eee",
+        background: "transparent"
+      }}>
+        © {new Date().getFullYear()} RSA CRT Demo · Made by BBIYAKYEE7
+      </footer>
+    </div>
+  );
+}
+
+export default App;
