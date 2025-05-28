@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 
-// 최대공약수
+// 최대공약수 (BigInt)
 function gcd(a, b) {
   a = BigInt(a);
   b = BigInt(b);
   return b === 0n ? a : gcd(b, a % b);
 }
 
-
-// 모듈러 역원 (확장 유클리드)
+// 모듈러 역원 (확장 유클리드, BigInt)
 function modInverse(e, phi) {
   let [a, b] = [phi, e];
   let [x0, x1] = [0n, 1n];
@@ -21,7 +20,7 @@ function modInverse(e, phi) {
   return x0 < 0n ? x0 + phi : x0;
 }
 
-// 모듈러 거듭제곱
+// 모듈러 거듭제곱 (BigInt)
 function modPow(base, exp, mod) {
   base = BigInt(base);
   exp = BigInt(exp);
@@ -36,7 +35,7 @@ function modPow(base, exp, mod) {
   return result;
 }
 
-// 소수 판별 함수
+// 소수 판별 함수 (Number)
 function isPrime(n) {
   if (n < 2) return false;
   for (let i = 2; i * i <= n; i++) {
@@ -45,7 +44,7 @@ function isPrime(n) {
   return true;
 }
 
-// min~max 범위의 무작위 소수 생성
+// min~max 범위의 무작위 소수 생성 (Number)
 function randomPrime(min, max) {
   let prime = 0;
   // eslint-disable-next-line no-constant-condition
@@ -98,56 +97,56 @@ function App() {
     setQ(rq);
   };
 
-const handleRSA = () => {
-  const P = BigInt(p);
-  const Q = BigInt(q);
-  const m = BigInt(message);
+  const handleRSA = () => {
+    const P = BigInt(p);
+    const Q = BigInt(q);
+    const m = BigInt(message);
 
-  if (!P || !Q || !m) {
-    alert("p, q, 평문을 모두 입력하세요.");
-    return;
-  }
+    if (!P || !Q || !m) {
+      alert("p, q, 평문을 모두 입력하세요.");
+      return;
+    }
 
-  const n = P * Q;
-  const phi = (P - 1n) * (Q - 1n);
+    const n = P * Q;
+    const phi = (P - 1n) * (Q - 1n);
 
-  let e = 3n;
-  while (e < phi && gcd(Number(e), Number(phi)) !== 1) e += 2n;
+    let e = 3n;
+    while (e < phi && gcd(e, phi) !== 1n) e += 2n;
 
-  const d = BigInt(modInverse(Number(e), Number(phi)));
-  const c = modPow(m, e, n);
+    const d = modInverse(e, phi);
+    const c = modPow(m, e, n);
 
-  // 암호화 과정
-  setEncryptSteps([
-    latex(`n = p \\times q = ${P} \\times ${Q} = ${n}`),
-    latex(`\\varphi(n) = (p-1) \\times (q-1) = ${P - 1n} \\times ${Q - 1n} = ${phi}`),
-    latex(`e: 1 < e < \\varphi(n),\\ \\gcd(e,\\varphi(n)) = 1\\ \\Rightarrow\\ e = ${e}`),
-    latex(`d = e^{-1} \\bmod \\varphi(n) = ${d}`),
-    latex(`\\text{공개키: } (e, n) = (${e}, ${n}),\\ \\text{개인키: } (d, n) = (${d}, ${n})`),
-    latex(`\\text{암호문 } c = m^e \\bmod n = ${m}^{${e}} \\bmod ${n} = ${c}`),
-  ]);
+    // 암호화 과정
+    setEncryptSteps([
+      latex(`n = p \\times q = ${P} \\times ${Q} = ${n}`),
+      latex(`\\varphi(n) = (p-1) \\times (q-1) = ${P - 1n} \\times ${Q - 1n} = ${phi}`),
+      latex(`e: 1 < e < \\varphi(n),\\ \\gcd(e,\\varphi(n)) = 1\\ \\Rightarrow\\ e = ${e}`),
+      latex(`d = e^{-1} \\bmod \\varphi(n) = ${d}`),
+      latex(`\\text{공개키: } (e, n) = (${e}, ${n}),\\ \\text{개인키: } (d, n) = (${d}, ${n})`),
+      latex(`\\text{암호문 } c = m^e \\bmod n = ${m}^{${e}} \\bmod ${n} = ${c}`),
+    ]);
 
-  // CRT 복호화 과정
-  const dp = d % (P - 1n);
-  const dq = d % (Q - 1n);
-  const qinv = BigInt(modInverse(Number(Q), Number(P)));
-  const m1 = modPow(c, dp, P);
-  const m2 = modPow(c, dq, Q);
-  const h = (qinv * ((m1 - m2 + P) % P)) % P;
-  const m_crt = (m2 + h * Q) % n;
+    // CRT 복호화 과정
+    const dp = d % (P - 1n);
+    const dq = d % (Q - 1n);
+    const qinv = modInverse(Q, P);
+    const m1 = modPow(c, dp, P);
+    const m2 = modPow(c, dq, Q);
+    const h = (qinv * ((m1 - m2 + P) % P)) % P;
+    const m_crt = (m2 + h * Q) % n;
 
-  setCrtSteps([
-    latex(`d_p = d \\bmod (p-1) = ${d} \\bmod ${P - 1n} = ${dp}`),
-    latex(`d_q = d \\bmod (q-1) = ${d} \\bmod ${Q - 1n} = ${dq}`),
-    latex(`q_{inv} = q^{-1} \\bmod p = ${Q}^{-1} \\bmod ${P} = ${qinv}`),
-    latex(`m_1 = c^{d_p} \\bmod p = ${c}^{${dp}} \\bmod ${P} = ${m1}`),
-    latex(`m_2 = c^{d_q} \\bmod q = ${c}^{${dq}} \\bmod ${Q} = ${m2}`),
-    latex(`h = q_{inv} \\times (m_1 - m_2) \\bmod p = ${qinv} \\times (${m1} - ${m2}) \\bmod ${P} = ${h}`),
-    latex(`\\text{CRT 공식: } m = m_2 + h \\times q \\bmod n`),
-    latex(`m = ${m2} + ${h} \\times ${Q} \\bmod ${n} = ${m_crt}`),
-    latex(`\\text{복호화 결과: } ${m_crt}`),
-  ]);
-};
+    setCrtSteps([
+      latex(`d_p = d \\bmod (p-1) = ${d} \\bmod ${P - 1n} = ${dp}`),
+      latex(`d_q = d \\bmod (q-1) = ${d} \\bmod ${Q - 1n} = ${dq}`),
+      latex(`q_{inv} = q^{-1} \\bmod p = ${Q}^{-1} \\bmod ${P} = ${qinv}`),
+      latex(`m_1 = c^{d_p} \\bmod p = ${c}^{${dp}} \\bmod ${P} = ${m1}`),
+      latex(`m_2 = c^{d_q} \\bmod q = ${c}^{${dq}} \\bmod ${Q} = ${m2}`),
+      latex(`h = q_{inv} \\times (m_1 - m_2) \\bmod p = ${qinv} \\times (${m1} - ${m2}) \\bmod ${P} = ${h}`),
+      latex(`\\text{CRT 공식: } m = m_2 + h \\times q \\bmod n`),
+      latex(`m = ${m2} + ${h} \\times ${Q} \\bmod ${n} = ${m_crt}`),
+      latex(`\\text{복호화 결과: } ${m_crt}`),
+    ]);
+  };
 
   return (
     <div className="App">
