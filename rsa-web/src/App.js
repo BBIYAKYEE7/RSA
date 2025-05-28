@@ -63,6 +63,24 @@ function latex(str) {
   return `<span style="font-size:1.1em;">\\(${str}\\)</span>`;
 }
 
+// 간단한 팝업(모달) 컴포넌트
+function Popup({ open, message, onClose }) {
+  if (!open) return null;
+  return (
+    <div style={{
+      position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh",
+      background: "rgba(0,0,0,0.25)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000
+    }}>
+      <div style={{
+        background: "#fff", padding: "28px 32px", borderRadius: 8, boxShadow: "0 2px 16px #0002", minWidth: 260
+      }}>
+        <div style={{ marginBottom: 18, fontSize: "1.08em" }}>{message}</div>
+        <button onClick={onClose} style={{ padding: "6px 18px" }}>확인</button>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [p, setP] = useState("");
   const [q, setQ] = useState("");
@@ -70,6 +88,8 @@ function App() {
   const [encryptSteps, setEncryptSteps] = useState([]);
   const [crtSteps, setCrtSteps] = useState([]);
   const [primeType, setPrimeType] = useState("2digit");
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [popupMsg, setPopupMsg] = useState("");
 
   // MathJax 수식 렌더링 트리거
   useEffect(() => {
@@ -77,6 +97,12 @@ function App() {
       window.MathJax.typesetPromise();
     }
   }, [encryptSteps, crtSteps]);
+
+  // 팝업 띄우기 함수
+  const showPopup = msg => {
+    setPopupMsg(msg);
+    setPopupOpen(true);
+  };
 
   // 소수 무작위 생성 핸들러
   const handleRandomPrimes = () => {
@@ -103,11 +129,16 @@ function App() {
     const m = BigInt(message);
 
     if (!P || !Q || !m) {
-      alert("p, q, 평문을 모두 입력하세요.");
+      showPopup("p, q, 평문을 모두 입력하세요.");
       return;
     }
 
     const n = P * Q;
+    if (m >= n) {
+      showPopup(`평문이 n보다 작아야 합니다. (현재 n = ${n})`);
+      return;
+    }
+
     const phi = (P - 1n) * (Q - 1n);
 
     let e = 3n;
@@ -150,6 +181,7 @@ function App() {
 
   return (
     <div className="App">
+      <Popup open={popupOpen} message={popupMsg} onClose={() => setPopupOpen(false)} />
       <div className="main-content">
         <h2>RSA 암호화/복호화 (CRT 과정 포함, LaTeX 수식)</h2>
         <div style={{marginBottom: 8}}>
