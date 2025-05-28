@@ -29,6 +29,29 @@ function modPow(base, exp, mod) {
   return result;
 }
 
+// 소수 판별 함수
+function isPrime(n) {
+  if (n < 2) return false;
+  for (let i = 2; i * i <= n; i++) {
+    if (n % i === 0) return false;
+  }
+  return true;
+}
+
+// min~max 범위의 무작위 소수 생성
+function randomPrime(min, max) {
+  let prime = 0;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    let n = Math.floor(Math.random() * (max - min + 1)) + min;
+    if (isPrime(n)) {
+      prime = n;
+      break;
+    }
+  }
+  return prime;
+}
+
 // LaTeX 수식 span
 function latex(str) {
   return `<span style="font-size:1.1em;">\\(${str}\\)</span>`;
@@ -40,6 +63,7 @@ function App() {
   const [message, setMessage] = useState("");
   const [encryptSteps, setEncryptSteps] = useState([]);
   const [crtSteps, setCrtSteps] = useState([]);
+  const [primeType, setPrimeType] = useState("2digit");
 
   // MathJax 수식 렌더링 트리거
   useEffect(() => {
@@ -47,6 +71,25 @@ function App() {
       window.MathJax.typesetPromise();
     }
   }, [encryptSteps, crtSteps]);
+
+  // 소수 무작위 생성 핸들러
+  const handleRandomPrimes = () => {
+    let min, max;
+    if (primeType === "2digit") {
+      min = 11; max = 97;
+    } else if (primeType === "16bit") {
+      min = 32768; max = 65535;
+    } else if (primeType === "32bit") {
+      min = 2147483648; max = 4294967295;
+    }
+    let rp = randomPrime(min, max);
+    let rq = randomPrime(min, max);
+    while (rp === rq) {
+      rq = randomPrime(min, max);
+    }
+    setP(rp);
+    setQ(rq);
+  };
 
   const handleRSA = () => {
     const P = parseInt(p, 10);
@@ -103,17 +146,43 @@ function App() {
     <div className="App">
       <div className="main-content">
         <h2>RSA 암호화/복호화 (CRT 과정 포함, LaTeX 수식)</h2>
-        <div>
+        <div style={{marginBottom: 8}}>
           <label>
-            소수 p:{" "}
-            <input value={p} onChange={e => setP(e.target.value)} type="number" />
+            <input
+              type="radio"
+              name="primeType"
+              value="2digit"
+              checked={primeType === "2digit"}
+              onChange={() => setPrimeType("2digit")}
+            /> 2자리 이상 소수
+          </label>
+          &nbsp;
+          <label>
+            <input
+              type="radio"
+              name="primeType"
+              value="16bit"
+              checked={primeType === "16bit"}
+              onChange={() => setPrimeType("16bit")}
+            /> 16비트 소수
+          </label>
+          &nbsp;
+          <label>
+            <input
+              type="radio"
+              name="primeType"
+              value="32bit"
+              checked={primeType === "32bit"}
+              onChange={() => setPrimeType("32bit")}
+            /> 32비트 소수
           </label>
         </div>
+        <button onClick={handleRandomPrimes} style={{ marginBottom: 10 }}>
+          무작위 소수 생성
+        </button>
         <div>
-          <label>
-            소수 q:{" "}
-            <input value={q} onChange={e => setQ(e.target.value)} type="number" />
-          </label>
+          <b>p:</b> {p ? p : "-"} &nbsp;&nbsp;
+          <b>q:</b> {q ? q : "-"}
         </div>
         <div>
           <label>
