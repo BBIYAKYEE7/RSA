@@ -137,21 +137,19 @@ function App() {
   const [primeType, setPrimeType] = useState("2digit");
   const [popupOpen, setPopupOpen] = useState(false);
   const [popupMsg, setPopupMsg] = useState("");
+  const [manualInput, setManualInput] = useState(false);
 
-  // MathJax 수식 렌더링 트리거
   useEffect(() => {
     if (window.MathJax && (encryptSteps.length > 0 || crtSteps.length > 0)) {
       window.MathJax.typesetPromise();
     }
   }, [encryptSteps, crtSteps]);
 
-  // 팝업 띄우기 함수
   const showPopup = msg => {
     setPopupMsg(msg);
     setPopupOpen(true);
   };
 
-  // 소수 무작위 생성 핸들러
   const handleRandomPrimes = () => {
     let min, max;
     if (primeType === "2digit") {
@@ -180,6 +178,21 @@ function App() {
       return;
     }
 
+    if (manualInput) {
+      if (!isPrime(Number(P))) {
+        showPopup("p가 소수가 아닙니다.");
+        return;
+      }
+      if (!isPrime(Number(Q))) {
+        showPopup("q가 소수가 아닙니다.");
+        return;
+      }
+      if (P === Q) {
+        showPopup("p와 q는 서로 달라야 합니다.");
+        return;
+      }
+    }
+
     const n = P * Q;
     if (m >= n) {
       showPopup(`평문이 n보다 작아야 합니다. (현재 n = ${n})`);
@@ -194,7 +207,6 @@ function App() {
     const d = modInverse(e, phi);
     const c = modPow(m, e, n);
 
-    // 암호화 과정
     setEncryptSteps([
       latex(`n = p \\times q = ${P} \\times ${Q} = ${n}`),
       latex(`\\varphi(n) = (p-1) \\times (q-1) = ${P - 1n} \\times ${Q - 1n} = ${phi}`),
@@ -204,7 +216,6 @@ function App() {
       latex(`\\text{암호문 } c = m^e \\bmod n = ${m}^{${e}} \\bmod ${n} = ${c}`),
     ]);
 
-    // CRT 복호화 과정
     const dp = d % (P - 1n);
     const dq = d % (Q - 1n);
     const qinv = modInverse(Q, P);
@@ -234,40 +245,76 @@ function App() {
         <div style={{marginBottom: 8}}>
           <label>
             <input
-              type="radio"
-              name="primeType"
-              value="2digit"
-              checked={primeType === "2digit"}
-              onChange={() => setPrimeType("2digit")}
-            /> 2자리 이상 소수
+              type="checkbox"
+              checked={manualInput}
+              onChange={e => {
+                setManualInput(e.target.checked);
+                setP("");
+                setQ("");
+              }}
+              style={{ marginRight: 6 }}
+            />
+            소수 직접 입력
           </label>
-          &nbsp;
-          <label>
-            <input
-              type="radio"
-              name="primeType"
-              value="16bit"
-              checked={primeType === "16bit"}
-              onChange={() => setPrimeType("16bit")}
-            /> 16비트 소수
-          </label>
-          &nbsp;
-          <label>
-            <input
-              type="radio"
-              name="primeType"
-              value="32bit"
-              checked={primeType === "32bit"}
-              onChange={() => setPrimeType("32bit")}
-            /> 32비트 소수
-          </label>
+          {!manualInput && (
+            <>
+              &nbsp;
+              <label>
+                <input
+                  type="radio"
+                  name="primeType"
+                  value="2digit"
+                  checked={primeType === "2digit"}
+                  onChange={() => setPrimeType("2digit")}
+                /> 2자리 이상 소수
+              </label>
+              &nbsp;
+              <label>
+                <input
+                  type="radio"
+                  name="primeType"
+                  value="16bit"
+                  checked={primeType === "16bit"}
+                  onChange={() => setPrimeType("16bit")}
+                /> 16비트 소수
+              </label>
+              &nbsp;
+              <label>
+                <input
+                  type="radio"
+                  name="primeType"
+                  value="32bit"
+                  checked={primeType === "32bit"}
+                  onChange={() => setPrimeType("32bit")}
+                /> 32비트 소수
+              </label>
+            </>
+          )}
         </div>
-        <button onClick={handleRandomPrimes} style={{ marginBottom: 10 }}>
-          무작위 소수 생성
-        </button>
+        {!manualInput && (
+          <button onClick={handleRandomPrimes} style={{ marginBottom: 10 }}>
+            무작위 소수 생성
+          </button>
+        )}
         <div>
-          <b>p:</b> {p ? p : "-"} &nbsp;&nbsp;
-          <b>q:</b> {q ? q : "-"}
+          <b>p:</b>{" "}
+          <input
+            value={p}
+            onChange={e => setP(e.target.value)}
+            type="number"
+            disabled={!manualInput && true}
+            style={{ width: 120, marginRight: 16 }}
+            placeholder="p"
+          />
+          <b>q:</b>{" "}
+          <input
+            value={q}
+            onChange={e => setQ(e.target.value)}
+            type="number"
+            disabled={!manualInput && true}
+            style={{ width: 120 }}
+            placeholder="q"
+          />
         </div>
         <div>
           <label>
