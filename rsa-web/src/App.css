@@ -58,6 +58,22 @@ button:hover {
   margin: 32px auto 0 auto;
   max-width: 600px;
   text-align: left;
+  overflow-x: auto;
+  white-space: normal;
+}
+
+.result-box .math,
+.result-box .formula,
+.result-box .equation {
+  display: block;
+  text-align: center;
+  margin: 18px 0;
+  /* 긴 수식 줄바꿈 */
+  overflow-x: auto;
+  word-break: break-all;
+  white-space: pre-line;
+  /* 필요시 아래 줄 추가 */
+  max-width: 100%;
 }
 
 .result-box h3 {
