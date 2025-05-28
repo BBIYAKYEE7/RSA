@@ -200,7 +200,7 @@ function App() {
             />
           </label>
         </div>
-        <button onClick={handleRSA} style={{ margin: "10px 0" }}>
+        <button onClick={handleRSA} style={{ margin: "10px 0", display: "block", marginLeft: "auto", marginRight: "auto" }}>
           암호화 및 CRT 복호화 과정 보기
         </button>
         {(encryptSteps.length > 0 || crtSteps.length > 0) && (
