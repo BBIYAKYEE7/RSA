@@ -63,19 +63,66 @@ function latex(str) {
   return `<span style="font-size:1.1em;">\\(${str}\\)</span>`;
 }
 
-// 간단한 팝업(모달) 컴포넌트
+// 애니메이션 팝업(모달) 컴포넌트
 function Popup({ open, message, onClose }) {
-  if (!open) return null;
+  const [visible, setVisible] = useState(open);
+  const [isClosing, setIsClosing] = useState(false);
+  const [shouldOpen, setShouldOpen] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setVisible(true);
+      setIsClosing(false);
+      setTimeout(() => setShouldOpen(true), 10); // 한 프레임 뒤에 open
+    } else if (visible) {
+      setIsClosing(true);
+      setShouldOpen(false);
+      const timer = setTimeout(() => {
+        setVisible(false);
+        setIsClosing(false);
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, [open, visible]);
+
+  if (!visible) return null;
+
   return (
-    <div style={{
-      position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh",
-      background: "rgba(0,0,0,0.25)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000
-    }}>
-      <div style={{
-        background: "#fff", padding: "28px 32px", borderRadius: 8, boxShadow: "0 2px 16px #0002", minWidth: 260
-      }}>
+    <div
+      className={
+        "popup-backdrop" +
+        (shouldOpen && !isClosing ? " open" : "") +
+        (isClosing ? " close" : "")
+      }
+    >
+      <div
+        className={
+          "popup-modal" +
+          (shouldOpen && !isClosing ? " open" : "") +
+          (isClosing ? " close" : "")
+        }
+        style={{
+          background: "rgba(255,255,255,0.85)",
+          backdropFilter: "blur(10px)",
+          padding: "28px 32px",
+          borderRadius: 8,
+          boxShadow: "0 2px 16px #0002",
+          minWidth: 260,
+        }}
+      >
         <div style={{ marginBottom: 18, fontSize: "1.08em" }}>{message}</div>
-        <button onClick={onClose} style={{ padding: "6px 18px" }}>확인</button>
+        <button
+          onClick={() => {
+            setIsClosing(true);
+            setShouldOpen(false);
+            setTimeout(() => {
+              onClose();
+            }, 350);
+          }}
+          style={{ padding: "6px 18px" }}
+        >
+          확인
+        </button>
       </div>
     </div>
   );
