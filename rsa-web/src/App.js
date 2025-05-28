@@ -235,7 +235,7 @@ function App() {
         borderTop: "1px solid #eee",
         background: "transparent"
       }}>
-        © {new Date().getFullYear()} RSA CRT Demo · Made by BBIYAKYEE7
+        © {new Date().getFullYear()} RSA CRT Demo · Made by BBIYAKYEE7 and Changeon Lee
       </footer>
     </div>
   );
